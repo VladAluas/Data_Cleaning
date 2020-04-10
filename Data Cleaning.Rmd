@@ -1,0 +1,320 @@
+---
+title: "The case for automated data cleaning"
+output: html_document
+css: article.css
+---
+
+<div class = "date">
+**`r format(Sys.time(), '%d %b %Y')`**
+</div>
+
+<div class = "tags">
+**Data Cleaning, Data Wrangling**
+</div>
+
+<div class = "time">
+**10 minute read**
+</div>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+________________
+
+# Introduction
+
+<div class="paragraph">
+
+In my experience as a data analyst, I used to spend most of my time on data cleaning and data validation. These processes are in most contexts or with a majority of companies a series of manual tasks that take up a lot of time and require a lot of focus from a data analyst. I am sure most of my colleagues can confirm this, especially those who work in an organisation that is slow to change its ways or work with people who are too accustomed to their ways that they are reluctant to adopt new tools and methods.
+
+Although common sense would tell us that manually cleaning the data would be the best way because every messy dataset is messy in its own way ([Wickham, 2014](https://vita.had.co.nz/papers/tidy-data.pdf)), I think that it is still better to try and automate these tasks. If that is not possible you can still automate part of the task and even so you at a win.
+
+I do not agree with a manual approach for repetitive tasks for several reasons. Here are the ones I consider the most important:
+  
+  * The quality of the work can vary between individuals. Some people are more organised than others and that can decrease the chances of overlooking something
+  * People get bored doing the same thing over and over again
+  * Doing tasks that take a lot of time and little creativity, data cleaning can be like that, can lower motivation and the analysts will no longer try to improve the datasets or find useful insights into the data
+  
+I think it's in everyone's interest for the analysts to have free time to think of ways in which they can use the data to improve the company or the environment around them, not just make sure the data is there and it is correct, checking record by record. For me, that used to be the most frustrating part of the job and it took me a lot of energy to find the motivation to start the work.
+  
+</div>
+
+<div class="paragraph">
+
+In the above section, I have discussed why data cleaning might be problematic when done manually. In the next section, I would like to go into a bit more detail about what is data cleaning and how we can automate some of the processes done by a data analyst so they can focus on analysis more than data manipulation.
+
+</div>
+
+# What is data cleaning and data wrangling
+
+## Data cleaning
+
+<div class="paragraph">
+
+We will start with data cleaning as it is the more general term used by people and generally refers to a process through which the data quality is ensured. This can include but is not limited to:
+
+  * ensuring the data format is correct (e.g. the dates have a standard format in the data source so the analysis software can detect it)
+  * dealing with missing data
+  * dealing with outliers
+
+</div>
+
+<div class="paragraph">
+
+When dealing with these cases, analysts don't necessarily spend the time to analyse each observation individually, but they rather follow a predetermined set of rules, usually a general rule per variable. See some examples below:
+
+  * changing the dates in a suitable format
+  * replacing missing records either with a mean, median or delete them altogether
+  * eliminating outliers from the analysis or separating them in a different dataset so they can be studied in detail
+  
+No matter which of these is encountered daily, there is no reason why this cannot be automated as we already have the logic for it, so we can program a computer to do the same.
+
+</div>
+
+## Data wrangling
+
+<div class="paragraph">
+
+Data wrangling is the process through which we manipulate the data so we can transform it in a format that is more suitable for our purposes. Data can come in a plethora of formats, however, when it comes to tabular data, which is the focus of this article, the format I found to be most useful and easiest to read and manipulate by most data software is a **Tidy Format** (see [here](https://vita.had.co.nz/papers/tidy-data.pdf)).
+
+We will see some interesting tools to use for data wrangling in the exercises that follow.
+
+</div>
+
+# Data cleaning in practice
+
+<div class="paragraph">
+
+In the next section, we will discuss and go through a series of exercises that will allow us to clean and manipulate the data in a data source. For this we will use the `tidyverse` package from `R`. If you do not have it installed, you can do so by copying the following link into your console `install.packages("tidyverse")`. Now that we have it installed, let's activate it.
+
+```{r}
+library(tidyverse)
+```
+
+</div>
+
+<div class="paragraph">
+
+In order to play around with a dataset, we will use the **mtcars** dataset that comes with the `tidyverse` package. We can see the dataset using the code below:
+
+```{r}
+mtcars %>%  # Our Dataset
+  head()    # First five results
+```
+
+</div>
+
+<div class="paragraph">
+
+If you are new to `R` and are not familiar with the `%>%` symbol used earlier, a good way to think of it is to consider that it links the actions attached to a dataset. It is to be read "take *dataset* then (%>%)". In this case it would be "take *mtcars* then show the top 5 records".
+
+Now that we have the dataset and the knowledge on how to read the code, let's start with actual data cleaning and wrangling.
+
+</div>
+
+### Mutate
+
+<div class="paragraph">
+
+As we can see, the row numbers in this data set are the car names. However, this is not very useful if we want to use the names in our analysis or group by name. So we will use a function that is very useful in data cleaning, `mutate`. Mutate allows the users to either create a new column at the end of a dataset, which is quite useful or change an existing column. We will use this to create a new column with the names of the cars.
+
+```{r}
+mtcars %>%
+  mutate(car_names = row.names(mtcars)) %>%
+  head()
+```
+
+</div>
+
+<div class="paragraph">
+
+As we can see, we have added a new column to the dataset. Now, what if we need to filter some data out of the data set? In order to do so, we can use the `filter` function.
+
+</div>
+
+### Filter
+
+<div class="paragraph">
+
+Let's filter out the cars with four cylinders (**cyl**).
+
+```{r}
+mtcars %>%
+  filter(cyl != 4)
+```
+
+</div>
+
+<div class="paragraph">
+
+As we can see the *Datsun 710* that had 4 cylinders has dissapeared from the first 6 records. 
+
+Of course, this function can also filter specific variables, and include multiple arguments. Let's try to filter just the cars that have 4 cylinders and more that 90 horse power (hp).
+
+```{r}
+mtcars %>%
+  filter(cyl == 4, hp > 90)
+```
+
+</div>
+
+<div class="paragraph">
+
+Please note that this function will not work if you do not add a double `=` when trying to compare values. One `=` means attribution in `R`, which is why the function cannot accept it.
+
+For missing data you can use `is.na(column_name)` as an argument in the filter.
+
+</div>
+
+### Selecting columns
+
+<div class="paragraph">
+
+Maybe in some situations, you do not need to use the full dataset you have at your disposal. In this case, you can use a `select` statement that will allow you to work with just the needed dataset. Let's select just two columns, **mpg** and **cyl**.
+
+```{r}
+mtcars %>%
+  select(mpg, cyl) %>%
+  head()
+```
+
+</div>
+
+<div class="paragraph">
+
+Now we can select just the needed data without over exhausting our computing resources with unnecessary data.
+
+What if we need to use multiple datasets and it would be good to have them all in one place? For that we can use a `join` statement.
+
+</div>
+
+### Join
+
+<div class="paragraph">
+
+Joining two or more datasets is quite a straightforward process, however, I would like to take a moment and explain it a little bit for those who do not have experience with it and point out some possible aspects that would be good to watch out for.
+
+The process of joining two datasets requires a reference column with common values in both tables. The joining process will look in the column from the first set, will search the values for each row in the other set and will bring all the values associated with that row in the first set. Let's see a simple example below. We will create two dummy data sets so we can demonstrate this better.
+
+```{r}
+letters <- cbind(ID = c(1, 2, 3, 3, 1, 2),
+                 Value1 = c("A", "B", "C", "D", "E", "F")) %>%
+           as_tibble()
+
+numbers <- cbind(ID = c(1, 2, 3, 4, 5, 6),
+                 Value2 = c("one", "two", "three", "four", "five", "six")) %>%
+           as_tibble()
+  
+letters
+numbers
+```
+
+</div>
+
+<div class="paragraph">
+
+Now that we have the two datasets I would like to point out that, as you can see, the **ID** values in the **numbers** dataset are unique and each is associated with a different value. In the first set, they are not, each appearing twice. Now let's check the join. We will use the `left_join` function as it is the most common.
+
+```{r}
+letters %>%
+  left_join(numbers, by = "ID")
+```
+
+</div>
+
+<div class="paragraph">
+
+As we can see, the values from **numbers** associated with a particular **ID** have been added to the **letters** table. Note that the values higher than three are missing because they do not have an associated **ID** in the first dataset. Now let’s see what happens if we try to do it the other way around. Remember that we need the joined table to have unique **ID** values and here is why.
+
+```{r}
+numbers %>%
+  left_join(letters, by = "ID")
+```
+
+Please notice that the function created additional rows for each time it encountered the needed **ID**.
+
+</div>
+
+### Pivoting and Unpivoting Data
+
+<div class="paragraph">
+
+Another useful function for a data analyst is to be able to pivot and unpivot data. There are a couple of methods to do this. The simplest is using two functions `pivot_longer` and `pivot_wider`. The first function gathers multiple columns in one (makes a table longer) and the other function creates new columns using a previous column. The functionality is similar to that of a pivot_table in Excel.
+
+Let's take a look at it in the following examples:
+
+</div>
+
+#### Pivot wider
+
+```{r}
+mtcars %>%
+  pivot_wider(names_from = cyl, values_from = mpg)
+```
+
+<div class="paragraph">
+
+As we can see, this function took the values from the **cyl** column, created new columns with those values and filled them with the values from the **mpg** column.
+
+</div>
+
+#### Pivot Longer
+
+<div class="paragraph">
+
+Pivot longer does the exact opposite. Let's see.
+
+```{r}
+mtcars %>%
+  pivot_wider(names_from = cyl, values_from = mpg) %>%
+  pivot_longer(cols = c("4", "6", "8"), names_to = "cyl", values_to = "mpg")
+```
+
+</div>
+
+<div class="paragraph">
+
+Now this created some extra rows, one for each extra column we previously created. We do not need three for each car considering that two of the are `NA's`. All we need to do in this situation is filter the data, eliminating the `NA` values
+
+```{r}
+mtcars %>%
+  pivot_wider(names_from = cyl, values_from = mpg) %>%
+  pivot_longer(cols = c("4", "6", "8"), names_to = "cyl", values_to = "mpg") %>%
+  filter(!is.na(mpg)) # notice the ! before the function in order to use the negative of the function
+```
+
+</div>
+
+<div class="paragraph">
+
+And now we can use a select to rearrange the columns.
+
+```{r}
+mtcars %>%
+  pivot_wider(names_from = cyl, values_from = mpg) %>%
+  pivot_longer(cols = c("4", "6", "8"), names_to = "cyl", values_to = "mpg") %>%
+  filter(!is.na(mpg)) %>%
+  select(mpg, cyl, disp, hp, drat, wt, qsec, vs, am, gear, carb) %>%
+  head()
+
+mtcars %>%
+  head()
+```
+
+</div>
+
+# Conclusions
+
+<div class="paragraph">
+
+As we could see in this article, `R` is a tool that offers a lot of flexibility when it comes to data cleaning and data wrangling. Therefore I highly recommended that data analysts use this tool, or other automation tools, in their jobs as it will improve the data quality and it will reduce the time spent on frustrating or boring tasks.
+
+I know it can be a bit of a headache at first since the learning curve for `R` can be a bit steep, however, I consider it is worth it. When I first started using `R` I was a bit intimidated by the fact that I did not know where to start implementing it into my job. Then I realised that it is enough to automate part of it, not everything at once and the results started to show immediately. All I needed to do was think of what were the steps I had to take in order to check something or create a report, and recreate those steps in `R`.
+
+This is a very good first step. You will see that reports or tasks that can take hours or days can be done in a few seconds or minutes if you automate your work and let a script run.
+
+Now that you have a lot more free time, you have the time to let me know how it went or if you encountered any problems.
+
+</div>
